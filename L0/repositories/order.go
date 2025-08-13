@@ -1,12 +1,21 @@
 package repositories
 
 import (
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"time"
 )
 
+type Request struct {
+	Order    *Order    `json:"order"`
+	Delivery *Delivery `json:"delivery"`
+	Payment  *Payment  `json:"payment"`
+	Items    *[]Item   `json:"items"`
+}
+
 type Order struct {
-	ID                string    `json:"id"`
+	OrderUID          string    `json:"order_uid" grom:"primary_key"`
 	TrackNumber       string    `json:"track_number"`
 	Entry             string    `json:"entry"`
 	Locale            string    `json:"locale"`
@@ -20,43 +29,46 @@ type Order struct {
 }
 
 type Delivery struct {
-	OrderID string `json:"order_id"`
-	Name    string `json:"name"`
-	Phone   string `json:"phone"`
-	Zip     string `json:"zip"`
-	City    string `json:"city"`
-	Address string `json:"address"`
-	Region  string `json:"region"`
-	Email   string `json:"email"`
+	ID       uuid.UUID `json:"id" grom:"primary_key"`
+	OrderUID string    `json:"order_uid"`
+	Name     string    `json:"name"`
+	Phone    string    `json:"phone"`
+	Zip      string    `json:"zip"`
+	City     string    `json:"city"`
+	Address  string    `json:"address"`
+	Region   string    `json:"region"`
+	Email    string    `json:"email"`
 }
 
 type Payment struct {
-	OrderID      string `json:"order_id"`
-	Transaction  string `json:"transaction"`
-	RequestId    string `json:"request_id"`
-	Currency     string `json:"currency"`
-	Provider     string `json:"provider"`
-	Amount       int    `json:"amount"`
-	PaymentDt    int    `json:"payment_dt"`
-	Bank         string `json:"bank"`
-	DeliveryCost int    `json:"delivery_cost"`
-	GoodsTotal   int    `json:"goods_total"`
-	CustomFee    int    `json:"custom_fee"`
+	ID           uuid.UUID `json:"id" grom:"primary_key"`
+	OrderUID     string    `json:"order_uid"`
+	Transaction  string    `json:"transaction"`
+	RequestId    string    `json:"request_id"`
+	Currency     string    `json:"currency"`
+	Provider     string    `json:"provider"`
+	Amount       int       `json:"amount"`
+	PaymentDt    int       `json:"payment_dt"`
+	Bank         string    `json:"bank"`
+	DeliveryCost int       `json:"delivery_cost"`
+	GoodsTotal   int       `json:"goods_total"`
+	CustomFee    int       `json:"custom_fee"`
 }
 
 type Item struct {
-	OrderID     string `json:"order_id"`
-	ChrtId      int    `json:"chrt_id"`
-	TrackNumber string `json:"track_number"`
-	Price       int    `json:"price"`
-	Rid         string `json:"rid"`
-	Name        string `json:"name"`
-	Sale        int    `json:"sale"`
-	Size        string `json:"size"`
-	TotalPrice  int    `json:"total_price"`
-	NmId        int    `json:"nm_id"`
-	Brand       string `json:"brand"`
-	Status      int    `json:"status"`
+	ID          uuid.UUID `json:"id" grom:"primary_key"`
+	OrderUID    string    `json:"order_uid"`
+	ChrtId      int       `json:"chrt_id"`
+	TrackNumber string    `json:"track_number"`
+	Price       int       `json:"price"`
+	Rid         string    `json:"rid"`
+	Name        string    `json:"name"`
+	Sale        int       `json:"sale"`
+	Size        string    `json:"size"`
+	TotalPrice  int       `json:"total_price"`
+	NmId        int       `json:"nm_id"`
+	Brand       string    `json:"brand"`
+	Status      int       `json:"status"`
 }
 
 type Repository struct {
@@ -65,4 +77,41 @@ type Repository struct {
 
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
+}
+
+func (r *Repository) SaveOrderTX(req *Request) error {
+
+	order := req.Order
+	delivery := req.Delivery
+	payment := req.Payment
+	items := req.Items
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Table("order").Save(&order).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to save order")
+		}
+
+		err = tx.Table("delivery").Save(&delivery).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to save delivery")
+		}
+
+		err = tx.Table("payment").Save(&payment).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to save payment")
+		}
+
+		err = tx.Table("item").Save(&items).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to save items")
+		}
+
+		return nil
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to execute save transaction")
+	}
+
+	return nil
 }
