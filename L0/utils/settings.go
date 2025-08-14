@@ -12,6 +12,7 @@ type Config struct {
 	Password string `yaml:"password"`
 	DBName   string `yaml:"dbname"`
 	Addr     string `yaml:"addr"`
+	Kafka    string `yaml:"kafka"`
 }
 
 var MyConfig *Config

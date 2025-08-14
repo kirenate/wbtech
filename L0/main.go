@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/segmentio/kafka-go"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -35,18 +36,30 @@ func main() {
 		panic(errors.Wrap(err, "failed to connect database"))
 	}
 
-	err = db.AutoMigrate(&repositories.Order{})
+	err = db.AutoMigrate(&repositories.Order{}, &repositories.Payment{}, &repositories.Delivery{}, &repositories.Item{})
 	if err != nil {
 		panic(errors.Wrap(err, "failed to merge database"))
 	}
 
 	log.Info().Msgf("db.%s.started.at %s:%d", utils.MyConfig.DBName, utils.MyConfig.Host, utils.MyConfig.Port)
 
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: []string{utils.MyConfig.Kafka},
+		Topic:   "events",
+	})
+	defer writer.Close()
+
+	reader := kafka.NewReader(kafka.ReaderConfig{
+		Brokers: []string{utils.MyConfig.Kafka},
+		Topic:   "events",
+	})
+	defer reader.Close()
+
 	repository := repositories.NewRepository(db)
 
-	service := services.NewService(repository)
+	service := services.NewService(repository, reader)
 
-	presentation := presentations.NewPresentation(service)
+	presentation := presentations.NewPresentation(service, writer)
 	app := presentation.BuildApp()
 
 	err = app.Listen(utils.MyConfig.Addr)

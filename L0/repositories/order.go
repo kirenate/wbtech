@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -79,7 +80,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) SaveOrderTX(req *Request) error {
+func (r *Repository) CreateOrderTX(req *Request) error {
 
 	order := req.Order
 	delivery := req.Delivery
@@ -87,22 +88,22 @@ func (r *Repository) SaveOrderTX(req *Request) error {
 	items := req.Items
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Table("order").Save(&order).Error
+		err := tx.Table("order").Clauses(clause.OnConflict{DoNothing: true}).Create(&order).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save order")
 		}
 
-		err = tx.Table("delivery").Save(&delivery).Error
+		err = tx.Table("delivery").Clauses(clause.OnConflict{DoNothing: true}).Create(&delivery).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save delivery")
 		}
 
-		err = tx.Table("payment").Save(&payment).Error
+		err = tx.Table("payment").Clauses(clause.OnConflict{DoNothing: true}).Create(&payment).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save payment")
 		}
 
-		err = tx.Table("item").Save(&items).Error
+		err = tx.Table("item").Clauses(clause.OnConflict{DoNothing: true}).Create(&items).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save items")
 		}
