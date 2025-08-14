@@ -43,12 +43,6 @@ func main() {
 
 	log.Info().Msgf("db.%s.started.at %s:%d", utils.MyConfig.DBName, utils.MyConfig.Host, utils.MyConfig.Port)
 
-	writer := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{utils.MyConfig.Kafka},
-		Topic:   "events",
-	})
-	defer writer.Close()
-
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{utils.MyConfig.Kafka},
 		Topic:   "events",
@@ -59,7 +53,7 @@ func main() {
 
 	service := services.NewService(repository, reader)
 
-	presentation := presentations.NewPresentation(service, writer)
+	presentation := presentations.NewPresentation(service)
 	app := presentation.BuildApp()
 
 	err = app.Listen(utils.MyConfig.Addr)
