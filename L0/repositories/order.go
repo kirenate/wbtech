@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"context"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -80,7 +81,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) CreateOrderTX(req *Request) error {
+func (r *Repository) CreateOrderTX(ctx context.Context, req *Request) error {
 
 	order := req.Order
 	delivery := req.Delivery
@@ -88,22 +89,22 @@ func (r *Repository) CreateOrderTX(req *Request) error {
 	items := req.Items
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Table("order").Clauses(clause.OnConflict{DoNothing: true}).Create(&order).Error
+		err := tx.WithContext(ctx).Table("order").Clauses(clause.OnConflict{DoNothing: true}).Create(&order).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save order")
 		}
 
-		err = tx.Table("delivery").Clauses(clause.OnConflict{DoNothing: true}).Create(&delivery).Error
+		err = tx.WithContext(ctx).Table("delivery").Clauses(clause.OnConflict{DoNothing: true}).Create(&delivery).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save delivery")
 		}
 
-		err = tx.Table("payment").Clauses(clause.OnConflict{DoNothing: true}).Create(&payment).Error
+		err = tx.WithContext(ctx).Table("payment").Clauses(clause.OnConflict{DoNothing: true}).Create(&payment).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save payment")
 		}
 
-		err = tx.Table("item").Clauses(clause.OnConflict{DoNothing: true}).Create(&items).Error
+		err = tx.WithContext(ctx).Table("item").Clauses(clause.OnConflict{DoNothing: true}).Create(&items).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to save items")
 		}
@@ -115,4 +116,26 @@ func (r *Repository) CreateOrderTX(req *Request) error {
 	}
 
 	return nil
+}
+
+func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Request, error) {
+	var req *Request
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var order *Order
+		err := tx.WithContext(ctx).Raw(
+			`SELECT * FROM order LEFT JOIN delivery ON order.order_uid = delivery.order_uid WHERE order_uid (?)
+			`, orderUID).Scan(&order).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to find delivery information")
+		}
+
+		req.Order = order
+
+		return nil
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to find order")
+	}
+
+	return req, nil
 }
