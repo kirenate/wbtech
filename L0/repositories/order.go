@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type Request struct {
+type Data struct {
 	Order    *Order    `json:"order"`
 	Delivery *Delivery `json:"delivery"`
 	Payment  *Payment  `json:"payment"`
@@ -81,7 +81,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) CreateOrderTX(ctx context.Context, req *Request) error {
+func (r *Repository) CreateOrderTX(ctx context.Context, req *Data) error {
 
 	order := req.Order
 	delivery := req.Delivery
@@ -118,13 +118,11 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Request) error {
 	return nil
 }
 
-func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Request, error) {
-	var req *Request
+func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Data, error) {
+	var req Data
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		var order *Order
-		err := tx.WithContext(ctx).Raw(
-			`SELECT * FROM order LEFT JOIN delivery ON order.order_uid = delivery.order_uid WHERE order_uid (?)
-			`, orderUID).Scan(&order).Error
+		err := tx.WithContext(ctx).Raw("SELECT order_uid FROM order JOIN delivery ON delivery.order_uid = order.order_uid WHERE order_uid ?", orderUID).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to find delivery information")
 		}
@@ -137,5 +135,5 @@ func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Request,
 		return nil, errors.Wrap(err, "failed to find order")
 	}
 
-	return req, nil
+	return &req, nil
 }

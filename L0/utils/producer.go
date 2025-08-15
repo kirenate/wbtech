@@ -1,0 +1,61 @@
+package utils
+
+import (
+	"context"
+	_ "embed"
+	"encoding/json"
+	"github.com/pkg/errors"
+	"github.com/segmentio/kafka-go"
+	"github.com/xyproto/randomstring"
+	"main.go/repositories"
+)
+
+//go:embed model.json
+var baseMsg []byte
+
+type Producer struct {
+	writer *kafka.Writer
+}
+
+func NewProducer() *Producer {
+	writer := kafka.NewWriter(kafka.WriterConfig{Brokers: []string{MyConfig.Kafka},
+		Topic: "events"})
+
+	return &Producer{writer: writer}
+}
+
+func (r *Producer) generateMsg() (*[]byte, error) {
+	var model *repositories.Data
+	err := json.Unmarshal(baseMsg, &model)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal base json model into Data structure")
+	}
+
+	model.Order.OrderUID = randomstring.String(10)
+
+	msg, err := json.Marshal(model)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal model into json")
+	}
+
+	return &msg, nil
+}
+
+func (r *Producer) SendMsg(ctx context.Context) error {
+	msg, err := r.generateMsg()
+	if err != nil {
+		return errors.Wrap(err, "failed to generate msg")
+	}
+
+	kafkaMsg := kafka.Message{
+		Topic: "events",
+		Value: *msg,
+	}
+
+	err = r.writer.WriteMessages(ctx, kafkaMsg)
+	if err != nil {
+		return errors.Wrap(err, "failed to write msg into kafka")
+	}
+
+	return nil
+}

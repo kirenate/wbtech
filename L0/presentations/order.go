@@ -2,6 +2,7 @@ package presentations
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/pkg/errors"
 	"main.go/services"
 )
 
@@ -13,8 +14,13 @@ func NewPresentation(service *services.Service) *Presentation {
 	return &Presentation{service: service}
 }
 
-func (r *Presentation) getOrders(c *fiber.Ctx) error {
+func (r *Presentation) getOrder(c *fiber.Ctx) error {
 	orderUID := c.Params("order_uid")
 
-	return c.JSON(fiber.Map{"order_uid": orderUID})
+	order, err := r.service.GetOrder(c.UserContext(), orderUID)
+	if err != nil {
+		return errors.Wrap(err, "service failed to get order")
+	}
+
+	return c.JSON(order)
 }
