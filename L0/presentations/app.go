@@ -17,5 +17,6 @@ func (r *Presentation) BuildApp() *fiber.App {
 	app.Use(recover2.New(recover2.Config{EnableStackTrace: true}))
 
 	app.Get("/order/:order_uid", r.getOrder)
+	app.Get("/order/generate-orders", r.generateOrders)
 	return app
 }

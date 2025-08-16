@@ -9,11 +9,11 @@ import (
 	"time"
 )
 
-type Data struct {
-	Order    *Order    `json:"order"`
-	Delivery *Delivery `json:"delivery"`
-	Payment  *Payment  `json:"payment"`
-	Items    *[]Item   `json:"items"`
+type Model struct {
+	Order
+	Delivery `json:"delivery"`
+	Payment  `json:"payment"`
+	Items    *[]Item `json:"items"`
 }
 
 type Order struct {
@@ -81,7 +81,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) CreateOrderTX(ctx context.Context, req *Data) error {
+func (r *Repository) CreateOrderTX(ctx context.Context, req *Model) error {
 
 	order := req.Order
 	delivery := req.Delivery
@@ -118,8 +118,8 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Data) error {
 	return nil
 }
 
-func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Data, error) {
-	var req Data
+func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, error) {
+	var req Model
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		var order *Order
 		err := tx.WithContext(ctx).Raw("SELECT order_uid FROM order JOIN delivery ON delivery.order_uid = order.order_uid WHERE order_uid ?", orderUID).Error
@@ -127,7 +127,7 @@ func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Data, er
 			return errors.Wrap(err, "failed to find delivery information")
 		}
 
-		req.Order = order
+		req.Order = *order
 
 		return nil
 	})

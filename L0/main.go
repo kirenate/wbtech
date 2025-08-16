@@ -23,7 +23,7 @@ func main() {
 
 	log.Info().Msg("logger.started")
 
-	err := utils.NewConfig()
+	err := utils.NewConfig(".data/.yaml")
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create config"))
 	}
@@ -54,6 +54,7 @@ func main() {
 	service := services.NewService(repository, reader)
 
 	presentation := presentations.NewPresentation(service)
+
 	app := presentation.BuildApp()
 
 	err = app.Listen(utils.MyConfig.Addr)

@@ -26,7 +26,7 @@ func (r *Service) ProcessMessage(ctx context.Context) error {
 		return errors.Wrap(err, "failed to fetch msg from kafka")
 	}
 
-	var req *repositories.Data
+	var req *repositories.Model
 	err = json.Unmarshal(msg.Value, &req)
 	if err != nil {
 		return errors.Wrap(err, "failed to unmarshal msg")
@@ -45,7 +45,7 @@ func (r *Service) ProcessMessage(ctx context.Context) error {
 	return nil
 }
 
-func (r *Service) GetOrder(ctx context.Context, orderUID string) (*repositories.Data, error) {
+func (r *Service) GetOrder(ctx context.Context, orderUID string) (*repositories.Model, error) {
 	order, err := r.repository.GetOrderTX(ctx, orderUID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get order from db")

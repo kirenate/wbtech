@@ -17,8 +17,8 @@ type Config struct {
 
 var MyConfig *Config
 
-func NewConfig() error {
-	file, err := os.Open(".data/.yaml")
+func NewConfig(path string) error {
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}

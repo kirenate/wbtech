@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"github.com/xyproto/randomstring"
@@ -25,13 +26,14 @@ func NewProducer() *Producer {
 }
 
 func (r *Producer) generateMsg() (*[]byte, error) {
-	var model *repositories.Data
+	var model *repositories.Model
 	err := json.Unmarshal(baseMsg, &model)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal base json model into Data structure")
 	}
 
 	model.Order.OrderUID = randomstring.String(10)
+	fmt.Println(model.Order.OrderUID)
 
 	msg, err := json.Marshal(model)
 	if err != nil {
@@ -47,10 +49,7 @@ func (r *Producer) SendMsg(ctx context.Context) error {
 		return errors.Wrap(err, "failed to generate msg")
 	}
 
-	kafkaMsg := kafka.Message{
-		Topic: "events",
-		Value: *msg,
-	}
+	kafkaMsg := kafka.Message{Value: *msg}
 
 	err = r.writer.WriteMessages(ctx, kafkaMsg)
 	if err != nil {
