@@ -1,31 +1,33 @@
-package main
+package test
 
 import (
+	"context"
 	"fmt"
+	"github.com/go-playground/assert/v2"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"main.go/presentations"
 	"main.go/repositories"
 	"main.go/services"
-
 	"main.go/utils"
+	"testing"
 )
 
-var log = utils.MakeLogger()
-
-func main() {
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-
-	log.Info().Msg("logger.started")
-
-	err := utils.NewConfig(".data/dev.yaml")
+func TestConsumer(t *testing.T) {
+	r := createService()
+	err := r.Consumer(context.Background())
 	if err != nil {
-		panic(errors.Wrap(err, "failed to create config"))
+		assert.IsEqual(err.Error(), "EOF")
+	}
+}
+
+func createService() *services.Service {
+	err := utils.NewConfig("../.data/dev.yaml")
+	if err != nil {
+		panic(err)
 	}
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		utils.MyConfig.Host, utils.MyConfig.Port, utils.MyConfig.User, utils.MyConfig.Password, utils.MyConfig.DBName)
@@ -41,8 +43,6 @@ func main() {
 		panic(errors.Wrap(err, "failed to merge database"))
 	}
 
-	log.Info().Msgf("db.%s.started.at %s:%d", utils.MyConfig.DBName, utils.MyConfig.Host, utils.MyConfig.Port)
-
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{utils.MyConfig.Kafka},
 		Topic:   "events",
@@ -53,13 +53,5 @@ func main() {
 
 	service := services.NewService(repository, reader)
 
-	presentation := presentations.NewPresentation(service)
-
-	app := presentation.BuildApp()
-
-	err = app.Listen(utils.MyConfig.Addr)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to start server"))
-	}
-
+	return service
 }

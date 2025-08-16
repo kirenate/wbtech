@@ -1,6 +1,7 @@
 package presentations
 
 import (
+	"context"
 	"github.com/gofiber/fiber/v2"
 	recover2 "github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/teadove/teasutils/fiber_utils"
@@ -17,6 +18,7 @@ func (r *Presentation) BuildApp() *fiber.App {
 	app.Use(recover2.New(recover2.Config{EnableStackTrace: true}))
 
 	app.Get("/order/:order_uid", r.getOrder)
-	app.Get("/order/generate-orders", r.generateOrders)
+	app.Get("/generate-orders", r.generateOrders)
+	r.service.Consumer(context.Background())
 	return app
 }

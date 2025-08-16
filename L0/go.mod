@@ -3,6 +3,7 @@ module main.go
 go 1.24.3
 
 require (
+	github.com/go-playground/assert/v2 v2.2.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/google/uuid v1.6.0
@@ -11,7 +12,6 @@ require (
 	github.com/segmentio/kafka-go v0.4.48
 	github.com/stretchr/testify v1.10.0
 	github.com/teadove/teasutils/fiber_utils v0.2.8
-	github.com/xyproto/randomstring v1.0.5
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.1

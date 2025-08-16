@@ -31,7 +31,7 @@ type Order struct {
 }
 
 type Delivery struct {
-	ID       uuid.UUID `json:"id" grom:"primary_key"`
+	ID       uuid.UUID `json:"id,omitempty" grom:"primary_key"`
 	OrderUID string    `json:"order_uid"`
 	Name     string    `json:"name"`
 	Phone    string    `json:"phone"`
@@ -43,7 +43,7 @@ type Delivery struct {
 }
 
 type Payment struct {
-	ID           uuid.UUID `json:"id" grom:"primary_key"`
+	ID           uuid.UUID `json:"id,omitempty" grom:"primary_key"`
 	OrderUID     string    `json:"order_uid"`
 	Transaction  string    `json:"transaction"`
 	RequestId    string    `json:"request_id"`
@@ -58,7 +58,7 @@ type Payment struct {
 }
 
 type Item struct {
-	ID          uuid.UUID `json:"id" grom:"primary_key"`
+	ID          uuid.UUID `json:"id,omitempty" grom:"primary_key"`
 	OrderUID    string    `json:"order_uid"`
 	ChrtId      int       `json:"chrt_id"`
 	TrackNumber string    `json:"track_number"`
@@ -121,13 +121,14 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Model) error {
 func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, error) {
 	var req Model
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		var order *Order
-		err := tx.WithContext(ctx).Raw("SELECT order_uid FROM order JOIN delivery ON delivery.order_uid = order.order_uid WHERE order_uid ?", orderUID).Error
+		var order Order
+		err := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o JOIN delivery ON delivery.order_uid = o.order_uid WHERE o.order_uid = ?`, orderUID).
+			Find(&order).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to find delivery information")
 		}
 
-		req.Order = *order
+		req.Order = order
 
 		return nil
 	})

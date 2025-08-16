@@ -2,12 +2,12 @@ package utils
 
 import (
 	"context"
+	"crypto/rand"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
-	"github.com/xyproto/randomstring"
 	"main.go/repositories"
 )
 
@@ -19,10 +19,13 @@ type Producer struct {
 }
 
 func NewProducer() *Producer {
-	writer := kafka.NewWriter(kafka.WriterConfig{Brokers: []string{MyConfig.Kafka},
-		Topic: "events"})
+	writer := kafka.Writer{
+		Addr:     kafka.TCP(MyConfig.Kafka),
+		Topic:    "events",
+		Balancer: &kafka.LeastBytes{},
+	}
 
-	return &Producer{writer: writer}
+	return &Producer{writer: &writer}
 }
 
 func (r *Producer) generateMsg() (*[]byte, error) {
@@ -32,7 +35,7 @@ func (r *Producer) generateMsg() (*[]byte, error) {
 		return nil, errors.Wrap(err, "failed to unmarshal base json model into Data structure")
 	}
 
-	model.Order.OrderUID = randomstring.String(10)
+	model.Order.OrderUID = rand.Text()
 	fmt.Println(model.Order.OrderUID)
 
 	msg, err := json.Marshal(model)

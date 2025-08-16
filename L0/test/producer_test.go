@@ -10,7 +10,7 @@ import (
 func TestSendMsg(t *testing.T) {
 	ctx := context.Background()
 
-	err := utils.NewConfig("../.data/.yaml")
+	err := utils.NewConfig("../.data/dev.yaml")
 	require.NoError(t, err)
 
 	producer := utils.NewProducer()
