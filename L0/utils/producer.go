@@ -47,17 +47,19 @@ func (r *Producer) generateMsg() (*[]byte, error) {
 }
 
 func (r *Producer) SendMsg(ctx context.Context) error {
-	msg, err := r.generateMsg()
-	if err != nil {
-		return errors.Wrap(err, "failed to generate msg")
+	for range 10 {
+		msg, err := r.generateMsg()
+		if err != nil {
+			return errors.Wrap(err, "failed to generate msg")
+		}
+
+		kafkaMsg := kafka.Message{Value: *msg}
+
+		err = r.writer.WriteMessages(ctx, kafkaMsg)
+		if err != nil {
+			return errors.Wrap(err, "failed to write msg into kafka")
+		}
 	}
-
-	kafkaMsg := kafka.Message{Value: *msg}
-
-	err = r.writer.WriteMessages(ctx, kafkaMsg)
-	if err != nil {
-		return errors.Wrap(err, "failed to write msg into kafka")
-	}
-
+	
 	return nil
 }

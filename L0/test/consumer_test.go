@@ -6,6 +6,7 @@ import (
 	"github.com/go-playground/assert/v2"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
+	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,14 +18,22 @@ import (
 )
 
 func TestConsumer(t *testing.T) {
-	r := createService()
-	err := r.Consumer(context.Background())
+	createConfig(t)
+	r := createConsumer(t)
+
+	msg, jsonMsg, err := r.Consume(context.Background())
 	if err != nil {
 		assert.IsEqual(err.Error(), "EOF")
 	}
+	require.NotEmpty(t, msg)
+	require.NotEmpty(t, jsonMsg)
+
+	fmt.Println(msg)
+	fmt.Println(jsonMsg)
 }
 
-func createService() *services.Service {
+func createRepository(t *testing.T) *repositories.Repository {
+	t.Helper()
 	err := utils.NewConfig("../.data/dev.yaml")
 	if err != nil {
 		panic(err)
@@ -42,16 +51,31 @@ func createService() *services.Service {
 	if err != nil {
 		panic(errors.Wrap(err, "failed to merge database"))
 	}
+	repository := repositories.NewRepository(db)
+	return repository
+}
+
+func createConsumer(t *testing.T) *services.Consumer {
+	t.Helper()
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers: []string{utils.MyConfig.Kafka},
-		Topic:   "events",
+		Brokers:     []string{utils.MyConfig.Kafka},
+		GroupID:     "0",
+		Topic:       "events",
+		Partition:   0,
+		MaxAttempts: 5,
 	})
-	defer reader.Close()
+	repository := createRepository(t)
+	consumer := services.NewConsumer(reader, repository)
 
-	repository := repositories.NewRepository(db)
+	return consumer
+}
 
-	service := services.NewService(repository, reader)
+func createConfig(t *testing.T) {
+	t.Helper()
 
-	return service
+	err := utils.NewConfig("../.data/dev.yaml")
+	if err != nil {
+		panic(err)
+	}
 }

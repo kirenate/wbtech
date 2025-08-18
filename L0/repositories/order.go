@@ -10,10 +10,11 @@ import (
 )
 
 type Model struct {
-	Order
-	Delivery `json:"delivery"`
-	Payment  `json:"payment"`
-	Items    *[]Item `json:"items"`
+	OrderUID string    `json:"order_uid" grom:"primary_key"`
+	Order    *Order    `json:"order"`
+	Delivery *Delivery `json:"delivery"`
+	Payment  *Payment  `json:"payment"`
+	Item     *[]Item   `json:"items"`
 }
 
 type Order struct {
@@ -86,7 +87,7 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Model) error {
 	order := req.Order
 	delivery := req.Delivery
 	payment := req.Payment
-	items := req.Items
+	items := req.Item
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		err := tx.WithContext(ctx).Table("order").Clauses(clause.OnConflict{DoNothing: true}).Create(&order).Error
@@ -119,22 +120,46 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Model) error {
 }
 
 func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, error) {
-	var req Model
+	req := &Model{OrderUID: orderUID}
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		var order Order
-		err := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o JOIN delivery ON delivery.order_uid = o.order_uid WHERE o.order_uid = ?`, orderUID).
+		var order *Order
+		err := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o WHERE o.order_uid = ?`, orderUID).
 			Find(&order).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to find order information")
+		}
+
+		var delivery *Delivery
+		err = tx.WithContext(ctx).Raw(`SELECT * FROM delivery d WHERE d.order_uid = ?`, orderUID).
+			Find(&delivery).Error
 		if err != nil {
 			return errors.Wrap(err, "failed to find delivery information")
 		}
 
+		var payment *Payment
+		err = tx.WithContext(ctx).Raw(`SELECT * FROM payment p WHERE p.order_uid = ?`, orderUID).
+			Find(&payment).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to find payment information")
+		}
+
+		var items *[]Item
+		err = tx.WithContext(ctx).Raw(`SELECT * FROM item i WHERE i.order_uid = ?`, orderUID).
+			Find(&items).Error
+		if err != nil {
+			return errors.Wrap(err, "failed to find item information")
+		}
+
 		req.Order = order
+		req.Delivery = delivery
+		req.Payment = payment
+		req.Item = items
 
 		return nil
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find order")
+		return nil, errors.Wrap(err, "failed to find order model")
 	}
 
-	return &req, nil
+	return req, nil
 }
