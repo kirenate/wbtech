@@ -15,7 +15,9 @@ type Service struct {
 }
 
 func NewService(repository *repositories.Repository, reader *kafka.Reader) *Service {
-	return &Service{repository: repository, reader: reader}
+	service := &Service{repository: repository, reader: reader}
+	service.BackgroundConsumer(ctx)
+	return service
 }
 
 var Validate = validator.New(validator.WithRequiredStructEnabled())
