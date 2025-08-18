@@ -10,11 +10,10 @@ import (
 )
 
 type Model struct {
-	OrderUID string    `json:"order_uid" grom:"primary_key"`
-	Order    *Order    `json:"order"`
-	Delivery *Delivery `json:"delivery"`
-	Payment  *Payment  `json:"payment"`
-	Item     *[]Item   `json:"items"`
+	Order
+	Delivery `json:"delivery"`
+	Payment  `json:"payment"`
+	Item     *[]Item `json:"items"`
 }
 
 type Order struct {
@@ -120,7 +119,7 @@ func (r *Repository) CreateOrderTX(ctx context.Context, req *Model) error {
 }
 
 func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, error) {
-	req := &Model{OrderUID: orderUID}
+	req := &Model{}
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		var order *Order
 		res := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o WHERE o.order_uid = ?`, orderUID).
@@ -162,9 +161,9 @@ func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, e
 			return errors.New("item does not exist")
 		}
 
-		req.Order = order
-		req.Delivery = delivery
-		req.Payment = payment
+		req.Order = *order
+		req.Delivery = *delivery
+		req.Payment = *payment
 		req.Item = items
 
 		return nil

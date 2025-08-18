@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	_ "embed"
 	"encoding/json"
-	"fmt"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"main.go/repositories"
@@ -32,11 +31,10 @@ func (r *Producer) generateMsg() (*[]byte, error) {
 	var model *repositories.Model
 	err := json.Unmarshal(baseMsg, &model)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal base json model into Data structure")
+		return nil, errors.Wrap(err, "failed to unmarshal base json model into model")
 	}
 
 	model.Order.OrderUID = rand.Text()
-	fmt.Println(model.Order.OrderUID)
 
 	msg, err := json.Marshal(model)
 	if err != nil {
@@ -60,6 +58,6 @@ func (r *Producer) SendMsg(ctx context.Context) error {
 			return errors.Wrap(err, "failed to write msg into kafka")
 		}
 	}
-	
+
 	return nil
 }

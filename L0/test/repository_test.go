@@ -13,8 +13,7 @@ func TestGetOrderTX(t *testing.T) {
 	order, err := repository.GetOrderTX(context.Background(), "WQLMV3NQ2CQYCP4LNJDQGDZLTB")
 	require.NoError(t, err)
 	require.NotEmpty(t, order)
-
-	fmt.Println(order.OrderUID)
+	
 	fmt.Println(order.Order)
 	fmt.Println(order.Delivery)
 	fmt.Println(order.Payment)
