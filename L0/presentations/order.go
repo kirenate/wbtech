@@ -20,7 +20,10 @@ func (r *Presentation) getOrder(c *fiber.Ctx) error {
 
 	order, err := r.service.GetOrder(c.UserContext(), orderUID)
 	if err != nil {
-		return errors.Wrap(err, "service failed to get order")
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: errors.Wrap(err, "service failed to get order").Error(),
+		}
 	}
 
 	return c.JSON(order)
@@ -28,16 +31,15 @@ func (r *Presentation) getOrder(c *fiber.Ctx) error {
 
 func (r *Presentation) generateOrders(c *fiber.Ctx) error {
 	producer := utils.NewProducer()
-	errs := make(chan error)
-	for range 10 {
-		go func() {
-			err := producer.SendMsg(c.UserContext())
-			errs <- err
-		}()
-		if err := <-errs; err != nil {
-			return errors.Wrap(err, "failed to send msg")
+	err := producer.SendMsg(c.UserContext())
+
+	if err != nil {
+		return &fiber.Error{
+			Code:    fiber.StatusInternalServerError,
+			Message: errors.Wrap(err, "failed to send msg").Error(),
 		}
+
 	}
-	
-	return nil
+
+	return c.JSON(&fiber.Map{"status": "success"})
 }
