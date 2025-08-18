@@ -123,31 +123,43 @@ func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, e
 	req := &Model{OrderUID: orderUID}
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		var order *Order
-		err := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o WHERE o.order_uid = ?`, orderUID).
-			Find(&order).Error
-		if err != nil {
-			return errors.Wrap(err, "failed to find order information")
+		res := tx.WithContext(ctx).Raw(`SELECT * FROM "order" o WHERE o.order_uid = ?`, orderUID).
+			Find(&order)
+		if res.Error != nil {
+			return errors.Wrap(res.Error, "failed to find order information")
+		}
+		if res.RowsAffected == 0 {
+			return errors.New("order does not exist")
 		}
 
 		var delivery *Delivery
-		err = tx.WithContext(ctx).Raw(`SELECT * FROM delivery d WHERE d.order_uid = ?`, orderUID).
-			Find(&delivery).Error
-		if err != nil {
-			return errors.Wrap(err, "failed to find delivery information")
+		res = tx.WithContext(ctx).Raw(`SELECT * FROM delivery d WHERE d.order_uid = ?`, orderUID).
+			Find(&delivery)
+		if res.Error != nil {
+			return errors.Wrap(res.Error, "failed to find delivery information")
+		}
+		if res.RowsAffected == 0 {
+			return errors.New("delivery does not exist")
 		}
 
 		var payment *Payment
-		err = tx.WithContext(ctx).Raw(`SELECT * FROM payment p WHERE p.order_uid = ?`, orderUID).
-			Find(&payment).Error
-		if err != nil {
-			return errors.Wrap(err, "failed to find payment information")
+		res = tx.WithContext(ctx).Raw(`SELECT * FROM payment p WHERE p.order_uid = ?`, orderUID).
+			Find(&payment)
+		if res.Error != nil {
+			return errors.Wrap(res.Error, "failed to find payment information")
+		}
+		if res.RowsAffected == 0 {
+			return errors.New("payment does not exist")
 		}
 
 		var items *[]Item
-		err = tx.WithContext(ctx).Raw(`SELECT * FROM item i WHERE i.order_uid = ?`, orderUID).
-			Find(&items).Error
-		if err != nil {
-			return errors.Wrap(err, "failed to find item information")
+		res = tx.WithContext(ctx).Raw(`SELECT * FROM item i WHERE i.order_uid = ?`, orderUID).
+			Find(&items)
+		if res.Error != nil {
+			return errors.Wrap(res.Error, "failed to find item information")
+		}
+		if res.RowsAffected == 0 {
+			return errors.New("item does not exist")
 		}
 
 		req.Order = order
