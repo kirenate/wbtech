@@ -9,8 +9,8 @@ import (
 )
 
 func (r *Service) BackgroundConsumer(ctx context.Context) {
-	for {
-		go func() {
+	go func() {
+		for {
 			msg, err := r.reader.FetchMessage(ctx)
 			if err != nil {
 				defer func() {
@@ -56,6 +56,6 @@ func (r *Service) BackgroundConsumer(ctx context.Context) {
 					}
 				}()
 			}
-		}()
-	}
+		}
+	}()
 }
