@@ -6,13 +6,16 @@ import (
 )
 
 type Config struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	DBName   string `yaml:"dbname"`
-	Addr     string `yaml:"addr"`
-	Kafka    string `yaml:"kafka"`
+	Host                   string `yaml:"host"`
+	Port                   int    `yaml:"port"`
+	User                   string `yaml:"user"`
+	Password               string `yaml:"password"`
+	DBName                 string `yaml:"dbname"`
+	Addr                   string `yaml:"addr"`
+	Kafka                  string `yaml:"kafka"`
+	MaxIdleConns           int    `yaml:"MaxIdleConns"`
+	MaxOpenConns           int    `yaml:"maxOpenConns"`
+	ConnMaxLifetimeMinutes int    `yaml:"connMaxLifetimeMinutes"`
 }
 
 var MyConfig *Config

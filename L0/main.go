@@ -12,6 +12,7 @@ import (
 	"main.go/presentations"
 	"main.go/repositories"
 	"main.go/services"
+	"time"
 
 	"main.go/utils"
 )
@@ -31,7 +32,17 @@ func main() {
 		utils.MyConfig.Host, utils.MyConfig.Port, utils.MyConfig.User, utils.MyConfig.Password, utils.MyConfig.DBName)
 
 	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), NamingStrategy: schema.NamingStrategy{SingularTable: true}})
+		Logger:         logger.Default.LogMode(logger.Info),
+		NamingStrategy: schema.NamingStrategy{SingularTable: true},
+	})
+	dbPool, err := db.DB()
+	if err != nil {
+		panic(errors.Wrap(err, "failed to set database connection pool"))
+	}
+
+	dbPool.SetMaxIdleConns(utils.MyConfig.MaxIdleConns)
+	dbPool.SetMaxOpenConns(utils.MyConfig.MaxOpenConns)
+	dbPool.SetConnMaxLifetime(utils.MyConfig.ConnMaxLifetimeMinutes * time.Minute)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to connect database"))
 	}
