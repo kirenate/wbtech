@@ -11,9 +11,9 @@ import (
 
 type Model struct {
 	Order
-	Delivery `json:"delivery"`
-	Payment  `json:"payment"`
-	Item     *[]Item `json:"items"`
+	Delivery Delivery `json:"delivery"`
+	Payment  Payment  `json:"payment"`
+	Item     *[]Item  `json:"items"`
 }
 
 type Order struct {

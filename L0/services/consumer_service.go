@@ -13,21 +13,17 @@ func (r *Service) BackgroundConsumer(ctx context.Context) {
 		for {
 			msg, err := r.reader.FetchMessage(ctx)
 			if err != nil {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Error().Err(err).Msg("failed to fetch msg, recovered")
-					}
-				}()
+				if r := recover(); r != nil {
+					log.Error().Err(err).Msg("failed to fetch msg, recovered")
+				}
 			}
 			myMsg := msg.Value
 			var jsonMsg *repositories.Model
 			err = json.Unmarshal(myMsg, &jsonMsg)
 			if err != nil {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Error().Err(err).Msg("failed to unmarshal msg value, recovered")
-					}
-				}()
+				if r := recover(); r != nil {
+					log.Error().Err(err).Msg("failed to unmarshal msg value, recovered")
+				}
 			}
 			jsonMsg.Delivery.OrderUID = jsonMsg.Order.OrderUID
 			jsonMsg.Delivery.ID = uuid.New()
@@ -42,19 +38,15 @@ func (r *Service) BackgroundConsumer(ctx context.Context) {
 
 			err = r.repository.CreateOrderTX(ctx, jsonMsg)
 			if err != nil {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Error().Err(err).Msg("failed to create order, recovered")
-					}
-				}()
+				if r := recover(); r != nil {
+					log.Error().Err(err).Msg("failed to create order, recovered")
+				}
 			}
 			err = r.reader.CommitMessages(ctx, msg)
 			if err != nil {
-				defer func() {
-					if r := recover(); r != nil {
-						log.Error().Err(err).Msg("failed to commit msg, recovered")
-					}
-				}()
+				if r := recover(); r != nil {
+					log.Error().Err(err).Msg("failed to commit msg, recovered")
+				}
 			}
 		}
 	}()
