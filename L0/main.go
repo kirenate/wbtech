@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis"
 	"github.com/rs/zerolog"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/driver/postgres"
@@ -26,6 +27,12 @@ func main() {
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create config"))
 	}
+
+	err = utils.NewRedisConfig(".data/dev.yaml")
+	if err != nil {
+		panic(errors.Wrap(err, "failed to create redis config"))
+	}
+
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		utils.MyConfig.Host, utils.MyConfig.Port, utils.MyConfig.User, utils.MyConfig.Password, utils.MyConfig.DBName)
 
@@ -33,6 +40,9 @@ func main() {
 		Logger:         logger.Default.LogMode(logger.Info),
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
 	})
+	if err != nil {
+		panic(errors.Wrap(err, "failed to connect database"))
+	}
 	dbPool, err := db.DB()
 	if err != nil {
 		panic(errors.Wrap(err, "failed to set database connection pool"))
@@ -41,9 +51,6 @@ func main() {
 	dbPool.SetMaxIdleConns(utils.MyConfig.MaxIdleConns)
 	dbPool.SetMaxOpenConns(utils.MyConfig.MaxOpenConns)
 	dbPool.SetConnMaxLifetime(utils.MyConfig.ConnMaxLifetime)
-	if err != nil {
-		panic(errors.Wrap(err, "failed to connect database"))
-	}
 
 	err = db.AutoMigrate(&repositories.Order{}, &repositories.Payment{}, &repositories.Delivery{}, &repositories.Item{})
 	if err != nil {
@@ -57,6 +64,15 @@ func main() {
 		Topic:   "events",
 	})
 	defer reader.Close()
+
+	red := redis.NewClient(&redis.Options{
+		Addr:        utils.RedisCFG.RedisAddr,
+		DB:          utils.RedisCFG.RedisDB,
+		MaxRetries:  utils.RedisCFG.MaxRetries,
+		DialTimeout: utils.RedisCFG.DialTimeout,
+		PoolTimeout: utils.RedisCFG.Timeout,
+		IdleTimeout: utils.RedisCFG.Timeout,
+	})
 
 	repository := repositories.NewRepository(db)
 

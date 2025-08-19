@@ -19,13 +19,47 @@ type Config struct {
 	MaxOpenConns            int           `yaml:"maxOpenConns"`
 	ConnMaxLifetimeDuration string        `yaml:"connMaxLifetimeMinutes"`
 	ConnMaxLifetime         time.Duration `yaml:"-"`
-	RedisAddr               string        `yaml:"redisAddr"`
-	RedisDB                 string        `yaml:"redisDB"`
-	MaxRetries              int           `yaml:"maxRetries"`
-	DialTimeoutDuration     string        `yaml:"dial_timeout"`
-	DialTimeout             time.Duration `yaml:"-"`
-	TimeoutDuration         string        `yaml:"timeout"`
-	Timeout                 time.Duration `yaml:"-"`
+}
+
+type RedisCfg struct {
+	RedisAddr           string        `yaml:"redisAddr"`
+	RedisDB             int           `yaml:"redisDB"`
+	MaxRetries          int           `yaml:"maxRetries"`
+	DialTimeoutDuration string        `yaml:"dial_timeout"`
+	DialTimeout         time.Duration `yaml:"-"`
+	TimeoutDuration     string        `yaml:"timeout"`
+	Timeout             time.Duration `yaml:"-"`
+	TTLDuration         string        `yaml:"ttl"`
+	TTL                 time.Duration `yaml:"-"`
+}
+
+var RedisCFG *RedisCfg
+
+func NewRedisConfig(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to open redis config file")
+	}
+	defer file.Close()
+
+	d := yaml.NewDecoder(file)
+	err = d.Decode(&MyConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to decode redis config")
+	}
+	RedisCFG.DialTimeout, err = time.ParseDuration(RedisCFG.DialTimeoutDuration)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse DialTimeoutDuration")
+	}
+	RedisCFG.Timeout, err = time.ParseDuration(RedisCFG.TimeoutDuration)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse TimeoutDuration")
+	}
+	RedisCFG.TTL, err = time.ParseDuration(RedisCFG.TTLDuration)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse TTLDuration")
+	}
+	return nil
 }
 
 var MyConfig *Config
@@ -44,14 +78,6 @@ func NewConfig(path string) error {
 	MyConfig.ConnMaxLifetime, err = time.ParseDuration(MyConfig.ConnMaxLifetimeDuration)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse ConnMaxLifetimeDuration")
-	}
-	MyConfig.DialTimeout, err = time.ParseDuration(MyConfig.DialTimeoutDuration)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse DialTimeoutDuration")
-	}
-	MyConfig.Timeout, err = time.ParseDuration(MyConfig.TimeoutDuration)
-	if err != nil {
-		return errors.Wrap(err, "failed to parse TimeoutDuration")
 	}
 	return nil
 }

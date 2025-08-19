@@ -3,17 +3,19 @@ package services
 import (
 	"context"
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis"
 	"github.com/segmentio/kafka-go"
 	"main.go/repositories"
 )
 
 type Service struct {
-	repository *repositories.Repository
-	reader     *kafka.Reader
+	repository  *repositories.Repository
+	reader      *kafka.Reader
+	redisClient *redis.Client
 }
 
-func NewService(repository *repositories.Repository, reader *kafka.Reader) *Service {
-	service := &Service{repository: repository, reader: reader}
+func NewService(repository *repositories.Repository, reader *kafka.Reader, redisClient *redis.Client) *Service {
+	service := &Service{repository: repository, reader: reader, redisClient: redisClient}
 	service.BackgroundConsumer(context.Background())
 	return service
 }

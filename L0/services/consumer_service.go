@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"main.go/repositories"
+	"time"
 )
 
 func (r *Service) BackgroundConsumer(ctx context.Context) {
@@ -42,6 +43,9 @@ func (r *Service) BackgroundConsumer(ctx context.Context) {
 					log.Error().Err(err).Msg("failed to create order, recovered")
 				}
 			}
+
+			r.redisClient.Set(jsonMsg.Order.OrderUID, jsonMsg, 10*time.Minute)
+
 			err = r.reader.CommitMessages(ctx, msg)
 			if err != nil {
 				if r := recover(); r != nil {
