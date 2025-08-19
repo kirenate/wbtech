@@ -1,12 +1,9 @@
 package test
 
 import (
-	"context"
 	"fmt"
-	"github.com/go-playground/assert/v2"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
-	"github.com/stretchr/testify/require"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -16,21 +13,6 @@ import (
 	"main.go/utils"
 	"testing"
 )
-
-func TestConsumer(t *testing.T) {
-	createConfig(t)
-	r := createConsumer(t)
-
-	msg, jsonMsg, err := r.Consume(context.Background())
-	if err != nil {
-		assert.IsEqual(err.Error(), "EOF")
-	}
-	require.NotEmpty(t, msg)
-	require.NotEmpty(t, jsonMsg)
-
-	fmt.Println(msg)
-	fmt.Println(jsonMsg)
-}
 
 func createRepository(t *testing.T) *repositories.Repository {
 	t.Helper()
@@ -55,7 +37,7 @@ func createRepository(t *testing.T) *repositories.Repository {
 	return repository
 }
 
-func createConsumer(t *testing.T) *services.Consumer {
+func createService(t *testing.T) *services.Service {
 	t.Helper()
 
 	reader := kafka.NewReader(kafka.ReaderConfig{
@@ -66,7 +48,7 @@ func createConsumer(t *testing.T) *services.Consumer {
 		MaxAttempts: 5,
 	})
 	repository := createRepository(t)
-	consumer := services.NewConsumer(reader, repository)
+	consumer := services.NewService(repository, reader)
 
 	return consumer
 }

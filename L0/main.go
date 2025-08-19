@@ -12,8 +12,6 @@ import (
 	"main.go/presentations"
 	"main.go/repositories"
 	"main.go/services"
-	"time"
-
 	"main.go/utils"
 )
 
@@ -42,7 +40,7 @@ func main() {
 
 	dbPool.SetMaxIdleConns(utils.MyConfig.MaxIdleConns)
 	dbPool.SetMaxOpenConns(utils.MyConfig.MaxOpenConns)
-	dbPool.SetConnMaxLifetime(utils.MyConfig.ConnMaxLifetimeMinutes * time.Minute)
+	dbPool.SetConnMaxLifetime(utils.MyConfig.ConnMaxLifetime)
 	if err != nil {
 		panic(errors.Wrap(err, "failed to connect database"))
 	}
