@@ -1,0 +1,183 @@
+---
+definitions:
+  Order:
+    properties:
+      order_uid:
+        type: string
+        example: b563feb7b2b84b6test
+      track_number:
+        type: string
+        example: WBILMTESTTRACK
+      entry:
+        type: string
+        example: WBIL
+      delivery:
+        properties:
+          name:
+            type: string
+            example: Test Testov
+          phone:
+            type: string
+            minLength: 11
+            maxLength: 11
+            example: +9720000000
+          zip:
+            type: integer
+            example: 2639809
+          city:
+            type: string
+            example: Kiryat Mozkin
+          address:
+            type: string
+            example: Ploshad Mira 15
+          region:
+            type: string
+            example: Kraiot
+          email:
+            type: string
+            format: email
+            example: test@gmail.com
+        type: object
+      payment:
+        properties:
+          transaction:
+            type: string
+            example: b563feb7b2b84b6test
+          request_id:
+            type: string
+          currency:
+            type: string
+            example: USD
+          provider:
+            type: string
+            example: wbpay
+          amount:
+            type: integer
+            example: 1817
+          payment_dt:
+            type: integer
+            example: 1637907727
+          bank:
+            type: string
+            example: alpha
+          delivery_cost:
+            type: integer
+            example: 1500
+          goods_total:
+            type: integer
+            example: 317
+          custom_fee:
+            type: integer
+            example: 0
+        type: object
+      items:
+        properties:
+          chrt_id:
+            type: integer
+            example: 9934930
+          track_number:
+            type: string
+            example: WBILMTESTTRACK
+          price:
+            type: integer
+            example: 453
+          rid:
+            type: string
+            example: ab4219087a764ae0btest
+          name:
+            type: string
+            example: Mascaras
+          sale:
+            type: integer
+            example: 30
+          size:
+            type: string
+            example: 0
+          total_price:
+            type: integer
+            example: 317
+          nm_id:
+            type: integer
+            example: 2389212
+          brand:
+            type: string
+            example: Vivienne Sabo
+          status:
+            type: integer
+            example: 202
+        type: array
+      locale:
+        type: string
+        example: en
+      internal_signature:
+        type: string
+      customer_id:
+        type: string
+        example: test
+      delivery_service:
+        type: string
+        example: meest
+      shardkey:
+        type: string
+        example: 9
+      sm_id:
+        type: integer
+        example: 99
+      date_created:
+        type: string
+        format: date
+        example: 2021-11-26T06:22:19Z
+      oof_shard:
+        type: string
+        example: 1
+    type: object
+info:
+  description: This is an API for wb L0
+  title: L0
+  version: "0.1"
+paths:
+  /order/<order_uid>:
+    get:
+      description: Get order by order id
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+                example: success
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              message:
+                type: string
+                example: service failed to get order
+            type: object
+  /generate-orders:
+    get:
+      description: Send random orders to kafka
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+                example: success
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              message:
+                type: string
+                example: service failed to get order
+            type: object
+swagger: "2.0"

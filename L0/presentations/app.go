@@ -19,5 +19,7 @@ func (r *Presentation) BuildApp() *fiber.App {
 	app.Get("/order/:order_uid", r.getOrder)
 	app.Get("/generate-orders", r.generateOrders)
 
+	app.Get("/docs", r.swagger)
+	app.Get("/openapi.yaml", r.openapi)
 	return app
 }
