@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
-	"github.com/redis/go-redis"
 	"github.com/segmentio/kafka-go"
 	"main.go/repositories"
 )
@@ -21,9 +21,18 @@ func NewService(repository *repositories.Repository, reader *kafka.Reader, redis
 }
 
 func (r *Service) GetOrder(ctx context.Context, orderUID string) (*repositories.Model, error) {
-	order, err := r.repository.GetOrderTX(ctx, orderUID)
+	var order *repositories.Model
+	stat := r.redisClient.Get(ctx, orderUID)
+	if errors.Is(stat.Err(), redis.Nil) {
+		order, err := r.repository.GetOrderTX(ctx, orderUID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get order from db")
+		}
+		return order, nil
+	}
+	err := stat.Scan(order)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get order from db")
+		return nil, errors.Wrap(err, "failed to scan into order")
 	}
 
 	return order, nil

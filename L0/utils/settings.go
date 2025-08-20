@@ -25,9 +25,9 @@ type RedisCfg struct {
 	RedisAddr           string        `yaml:"redisAddr"`
 	RedisDB             int           `yaml:"redisDB"`
 	MaxRetries          int           `yaml:"maxRetries"`
-	DialTimeoutDuration string        `yaml:"dial_timeout"`
+	DialTimeoutDuration string        `yaml:"dialTimeoutDuration"`
 	DialTimeout         time.Duration `yaml:"-"`
-	TimeoutDuration     string        `yaml:"timeout"`
+	TimeoutDuration     string        `yaml:"timeoutDuration"`
 	Timeout             time.Duration `yaml:"-"`
 	TTLDuration         string        `yaml:"ttl"`
 	TTL                 time.Duration `yaml:"-"`
@@ -43,7 +43,7 @@ func NewRedisConfig(path string) error {
 	defer file.Close()
 
 	d := yaml.NewDecoder(file)
-	err = d.Decode(&MyConfig)
+	err = d.Decode(&RedisCFG)
 	if err != nil {
 		return errors.Wrap(err, "failed to decode redis config")
 	}

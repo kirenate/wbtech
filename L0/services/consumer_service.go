@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"main.go/repositories"
-	"time"
+	"main.go/utils"
 )
 
 func (r *Service) BackgroundConsumer(ctx context.Context) {
@@ -44,8 +44,12 @@ func (r *Service) BackgroundConsumer(ctx context.Context) {
 				}
 			}
 
-			r.redisClient.Set(jsonMsg.Order.OrderUID, jsonMsg, 10*time.Minute)
-
+			stat := r.redisClient.Set(ctx, jsonMsg.Order.OrderUID, jsonMsg, utils.RedisCFG.TTL)
+			if stat.Err() != nil {
+				if r := recover(); r != nil {
+					log.Error().Err(stat.Err()).Msg("failed to set msg in cache, recovered")
+				}
+			}
 			err = r.reader.CommitMessages(ctx, msg)
 			if err != nil {
 				if r := recover(); r != nil {

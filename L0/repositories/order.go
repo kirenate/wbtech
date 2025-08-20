@@ -73,6 +73,8 @@ type Item struct {
 	Status      int       `json:"status"`
 }
 
+var ErrOrderDoesNotExist = errors.New("order does not exist")
+
 type Repository struct {
 	db *gorm.DB
 }
@@ -128,7 +130,7 @@ func (r *Repository) GetOrderTX(ctx context.Context, orderUID string) (*Model, e
 			return errors.Wrap(res.Error, "failed to find order information")
 		}
 		if res.RowsAffected == 0 {
-			return errors.New("order does not exist")
+			return ErrOrderDoesNotExist
 		}
 
 		var delivery *Delivery

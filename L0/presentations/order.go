@@ -3,6 +3,7 @@ package presentations
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/pkg/errors"
+	"main.go/repositories"
 	"main.go/services"
 	"main.go/utils"
 )
@@ -19,6 +20,12 @@ func (r *Presentation) getOrder(c *fiber.Ctx) error {
 	orderUID := c.Params("order_uid")
 
 	order, err := r.service.GetOrder(c.UserContext(), orderUID)
+	if errors.Is(err, repositories.ErrOrderDoesNotExist) {
+		return &fiber.Error{
+			Code:    fiber.StatusBadRequest,
+			Message: "incorrect order",
+		}
+	}
 	if err != nil {
 		return &fiber.Error{
 			Code:    fiber.StatusInternalServerError,

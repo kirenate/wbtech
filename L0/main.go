@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
-	"github.com/redis/go-redis"
 	"github.com/rs/zerolog"
 	"github.com/segmentio/kafka-go"
 	"gorm.io/driver/postgres"
@@ -76,7 +76,7 @@ func main() {
 
 	repository := repositories.NewRepository(db)
 
-	service := services.NewService(repository, reader)
+	service := services.NewService(repository, reader, red)
 
 	presentation := presentations.NewPresentation(service)
 
