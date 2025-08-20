@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	"main.go/repositories"
 )
@@ -24,6 +25,7 @@ func (r *Service) GetOrder(ctx context.Context, orderUID string) (*repositories.
 	var order *repositories.Model
 	stat := r.redisClient.Get(ctx, orderUID)
 	if errors.Is(stat.Err(), redis.Nil) {
+		log.Info().Interface("stat", stat).Send()
 		order, err := r.repository.GetOrderTX(ctx, orderUID)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get order from db")

@@ -5,47 +5,39 @@ import (
 	"github.com/pkg/errors"
 	"main.go/repositories"
 	"main.go/services"
-	"main.go/utils"
 )
 
 type Presentation struct {
-	service *services.Service
+	service  *services.Service
+	producer *services.Producer
 }
 
-func NewPresentation(service *services.Service) *Presentation {
-	return &Presentation{service: service}
+func NewPresentation(service *services.Service, producer *services.Producer) *Presentation {
+	return &Presentation{service: service, producer: producer}
 }
 
 func (r *Presentation) getOrder(c *fiber.Ctx) error {
 	orderUID := c.Params("order_uid")
 
 	order, err := r.service.GetOrder(c.UserContext(), orderUID)
-	if errors.Is(err, repositories.ErrOrderDoesNotExist) {
-		return &fiber.Error{
-			Code:    fiber.StatusBadRequest,
-			Message: "incorrect order",
-		}
-	}
 	if err != nil {
-		return &fiber.Error{
-			Code:    fiber.StatusInternalServerError,
-			Message: errors.Wrap(err, "service failed to get order").Error(),
+		if errors.Is(err, repositories.ErrOrderDoesNotExist) {
+			return &fiber.Error{
+				Code:    fiber.StatusBadRequest,
+				Message: "incorrect order",
+			}
 		}
+		return errors.Wrap(err, "service failed to get order")
 	}
 
 	return c.JSON(order)
 }
 
 func (r *Presentation) generateOrders(c *fiber.Ctx) error {
-	producer := utils.NewProducer()
-	err := producer.SendMsg(c.UserContext())
+	err := r.producer.SendMsg(c.UserContext())
 
 	if err != nil {
-		return &fiber.Error{
-			Code:    fiber.StatusInternalServerError,
-			Message: errors.Wrap(err, "failed to send msg").Error(),
-		}
-
+		return errors.Wrap(err, "failed to send msg")
 	}
 
 	return c.JSON(&fiber.Map{"status": "success"})

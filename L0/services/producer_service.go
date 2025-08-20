@@ -1,4 +1,4 @@
-package utils
+package services
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
 	"main.go/repositories"
+	"main.go/utils"
 )
 
 //go:embed model.json
@@ -19,7 +20,7 @@ type Producer struct {
 
 func NewProducer() *Producer {
 	writer := kafka.Writer{
-		Addr:     kafka.TCP(MyConfig.Kafka),
+		Addr:     kafka.TCP(utils.MyConfig.Kafka),
 		Topic:    "events",
 		Balancer: &kafka.LeastBytes{},
 	}

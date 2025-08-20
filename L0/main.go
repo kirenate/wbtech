@@ -77,8 +77,8 @@ func main() {
 	repository := repositories.NewRepository(db)
 
 	service := services.NewService(repository, reader, red)
-
-	presentation := presentations.NewPresentation(service)
+	producer := services.NewProducer()
+	presentation := presentations.NewPresentation(service, producer)
 
 	app := presentation.BuildApp()
 
