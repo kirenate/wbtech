@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func (r *Presentation) getOrderFront(c *fiber.Ctx) error {
+func (r *Presentation) frontend(c *fiber.Ctx) error {
 	file, err := os.Open(".data/frontend.html")
 	if err != nil {
 		return errors.Wrap(err, "failed to open frontend")

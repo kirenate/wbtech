@@ -16,8 +16,8 @@ func (r *Presentation) BuildApp() *fiber.App {
 	app.Use(fiber_utils.MiddlewareCtxTimeout(29 * time.Second))
 	app.Use(recover2.New(recover2.Config{EnableStackTrace: true}))
 
-	app.Get("/dev/order/:order_uid", r.getOrder)
-	app.Get("/order/:order_uid", r.getOrderFront)
+	app.Get("/", r.frontend)
+	app.Get("/order/:order_uid", r.getOrder)
 	app.Get("/generate-orders", r.generateOrders)
 
 	app.Get("/docs", r.swagger)
