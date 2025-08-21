@@ -23,12 +23,12 @@ func main() {
 
 	log.Info().Msg("logger.started")
 
-	err := utils.NewConfig(".data/dev.yaml")
+	err := utils.NewConfig(".data/.yaml")
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create config"))
 	}
 
-	err = utils.NewRedisConfig(".data/dev.yaml")
+	err = utils.NewRedisConfig(".data/.yaml")
 	if err != nil {
 		panic(errors.Wrap(err, "failed to create redis config"))
 	}
