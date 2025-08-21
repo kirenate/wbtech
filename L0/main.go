@@ -37,7 +37,7 @@ func main() {
 		utils.MyConfig.Host, utils.MyConfig.Port, utils.MyConfig.User, utils.MyConfig.Password, utils.MyConfig.DBName)
 
 	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{
-		Logger:         logger.Default.LogMode(logger.Info),
+		Logger:         logger.Default.LogMode(logger.Error),
 		NamingStrategy: schema.NamingStrategy{SingularTable: true},
 	})
 	if err != nil {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -32,9 +33,13 @@ func (r *Service) GetOrder(ctx context.Context, orderUID string) (*repositories.
 		}
 		return order, nil
 	}
-	err := stat.Scan(order)
+	res, err := stat.Bytes()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to scan into order")
+		return nil, errors.Wrap(err, "failed to scan into json")
+	}
+	err = json.Unmarshal(res, &order)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal json")
 	}
 
 	return order, nil
