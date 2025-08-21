@@ -145,11 +145,15 @@ paths:
         "200":
           description: OK
           schema:
+            $ref: "#/definitions/Order"
+            type: object
+        "400":
+          description: Bad Request
+          schema:
             properties:
               message:
                 type: string
-                example: success
-            type: object
+                example: incorrect order
         "500":
           description: Internal Server Error
           schema:
