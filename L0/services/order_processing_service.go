@@ -17,7 +17,7 @@ type Service struct {
 
 func NewService(repository *repositories.Repository, reader *kafka.Reader, redisClient *redis.Client) *Service {
 	service := &Service{repository: repository, reader: reader, redisClient: redisClient}
-	service.BackgroundConsumer(context.Background())
+	go service.BackgroundConsumer(context.Background())
 	return service
 }
 

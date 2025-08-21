@@ -13,20 +13,31 @@ import (
 
 func (r *Service) BackgroundConsumer(ctx context.Context) {
 	for {
-		msg, err := r.reader.FetchMessage(ctx)
+		err := r.fetch(ctx)
 		if err != nil {
 			log.Ctx(ctx).Error().Err(err).Send()
 		}
-		err = r.consume(ctx, &msg)
-		if err == nil {
-			err = r.reader.CommitMessages(ctx, msg)
-			if err != nil {
-				log.Ctx(ctx).Error().Err(err).Send()
-			}
-		} else {
-			log.Ctx(ctx).Error().Err(err).Send()
-		}
 	}
+}
+
+func (r *Service) fetch(ctx context.Context) error {
+	msg, err := r.reader.FetchMessage(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch msg")
+	}
+	err = utils.Validate.Struct(msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to validate msg")
+	}
+	err = r.consume(ctx, &msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to consume msg")
+	}
+	err = r.reader.CommitMessages(ctx, msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to commit msg")
+	}
+	return nil
 }
 
 func (r *Service) consume(ctx context.Context, msg *kafka.Message) error {
