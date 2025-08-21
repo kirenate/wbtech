@@ -1,0 +1,20 @@
+host: 127.0.0.1
+port: 5432
+user: wb_user
+password: wb_password
+dbname: wb_db
+
+addr: 0.0.0.0:8080
+
+kafka : localhost:9094
+
+maxIdleConns: 3
+maxOpenConns: 10
+connMaxLifetimeMinutes: 15m
+
+redisAddr: 0.0.0.0:6379
+redisDB: 0
+maxRetries: 5
+dialTimeoutDuration: 30s
+timeoutDuration: 30s
+ttl: 10m

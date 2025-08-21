@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find order</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: center;
+        }
+
+        #orderId {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        #orderId:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        #findOrderBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        #findOrderBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        #result {
+            min-height: 50px;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            display: none;
+        }
+
+        #result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        #result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        #result.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+
+            #orderId,
+            #findOrderBtn {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Find order</h1>
+        <div class="search-form">
+            <input type="text" id="orderId" placeholder="some-order-uid" />
+            <button id="findOrderBtn">Go!</button>
+        </div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('findOrderBtn').addEventListener('click', findOrder);
+
+        document.getElementById('orderId').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                findOrder();
+            }
+        });
+
+        function formatJSON(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        async function findOrder() {
+            const orderId = document.getElementById('orderId').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            // Reset result div
+            resultDiv.className = '';
+            resultDiv.innerHTML = '';
+
+            if (!orderId) {
+                resultDiv.textContent = 'Enter order_uid';
+                resultDiv.className = 'error';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="spinner"></div>Загрузка...';
+            resultDiv.className = 'loading';
+
+            try {
+                console.log(`Searching for order: ${orderId}`);
+
+                let response;
+                let apiUrl;
+                apiUrl = `/order/${orderId}`;
+                console.log(`Trying API URL: ${apiUrl}`);
+                response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    apiUrl = `/dev/order/${orderId}`;
+                    console.log(`Trying alternative API URL: ${apiUrl}`);
+                    response = await fetch(apiUrl);
+                }
+
+                console.log(`Response status: ${response.status}`);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    resultDiv.textContent = `Заказ не найден (${response.status}: ${response.statusText})`;
+                    resultDiv.className = 'error';
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Received data:', data);
+
+                resultDiv.textContent = formatJSON(data);
+                resultDiv.className = 'success';
+
+            } catch (err) {
+                console.error('Request error:', err);
+                resultDiv.textContent = 'Request error: ' + err.message;
+                resultDiv.className = 'error';
+            }
+        }
+
+        // Auto-fill with example order ID on page load
+        window.addEventListener('load', function () {
+            document.getElementById('orderId').value = 'some-order-uid';
+        });
+    </script>
+</body>
+
+</html>

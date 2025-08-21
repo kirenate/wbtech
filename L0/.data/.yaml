@@ -1,0 +1,20 @@
+host: postgres
+port: 5432
+user: wb_user
+password: wb_password
+dbname: wb_db
+
+addr: 0.0.0.0:8080
+
+kafka : kafka:9092
+
+maxIdleConns: 3
+maxOpenConns: 10
+connMaxLifetimeMinutes: 15m
+
+redisAddr: redis:6379
+redisDB: 0
+maxRetries: 5
+dialTimeoutDuration: 30s
+timeoutDuration: 30s
+ttl: 10m
