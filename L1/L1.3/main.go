@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
@@ -24,8 +25,8 @@ func main() {
 		wg.Add(1)
 		go worker(ch, &wg)
 	}
-	for i := range workers {
-		ch <- i
+	for {
+		ch <- rand.Int()
 	}
 	wg.Wait()
 
