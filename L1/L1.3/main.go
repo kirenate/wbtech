@@ -25,7 +25,7 @@ func main() {
 	for range workers {
 		i++
 		wg.Add(1)
-		go worker(ch, &wg, i)
+		go worker(ch, &wg)
 	}
 	for {
 		ch <- rand.Int()
@@ -34,10 +34,9 @@ func main() {
 
 }
 
-func worker(in chan int, wg *sync.WaitGroup, i int) {
+func worker(in chan int, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
-		fmt.Println("worker ", i)
 		fmt.Println(<-in)
 	}
 
