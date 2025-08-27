@@ -21,9 +21,8 @@ func main() {
 	}
 	var wg sync.WaitGroup
 	ch := make(chan int)
-	i := 0
+	
 	for range workers {
-		i++
 		wg.Add(1)
 		go worker(ch, &wg)
 	}
