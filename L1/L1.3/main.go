@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"math/rand"
 	"os"
 	"strconv"
 	"sync"
@@ -20,18 +21,24 @@ func main() {
 	}
 	var wg sync.WaitGroup
 	ch := make(chan int)
+	i := 0
 	for range workers {
+		i++
 		wg.Add(1)
-		go worker(ch, &wg)
+		go worker(ch, &wg, i)
 	}
-	for i := range workers {
-		ch <- i
+	for {
+		ch <- rand.Int()
 	}
 	wg.Wait()
 
 }
 
-func worker(in chan int, wg *sync.WaitGroup) {
+func worker(in chan int, wg *sync.WaitGroup, i int) {
 	defer wg.Done()
-	fmt.Println(<-in)
+	for {
+		fmt.Println("worker ", i)
+		fmt.Println(<-in)
+	}
+
 }
