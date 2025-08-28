@@ -27,14 +27,14 @@ func main() {
 	go worker(ctx, ch)
 
 	for {
-		ch <- rand.Int()
 		select {
 		case <-after:
 			ctx.Done()
+			close(ch)
 			fmt.Println("Exiting...")
 			os.Exit(1)
 		default:
-			continue
+			ch <- rand.Int()
 		}
 
 	}
