@@ -13,12 +13,12 @@ import (
 func main() {
 	args := os.Args
 	if len(args) < 2 {
-		panic(errors.New("please enter valid integer number of workers"))
+		panic(errors.New("please enter valid integer number of seconds"))
 	}
 	arg := args[1]
 	n, err := strconv.Atoi(arg)
 	if err != nil {
-		panic(errors.Wrap(err, "please enter valid integer number of workers"))
+		panic(errors.Wrap(err, "please enter valid integer number of seconds"))
 	}
 
 	ch := make(chan int)
