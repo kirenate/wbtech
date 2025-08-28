@@ -30,7 +30,6 @@ func main() {
 		select {
 		case <-after:
 			ctx.Done()
-			close(ch)
 			fmt.Println("Exiting...")
 			os.Exit(1)
 		default:
